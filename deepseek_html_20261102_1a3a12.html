@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniPlanner Pro - 阶梯式学业规划系统</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .timeline-dot::before { content: ''; position: absolute; left: -33px; top: 6px; width: 14px; height: 14px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+        .timeline-line { position: absolute; left: -26px; top: 10px; bottom: -20px; width: 2px; background: linear-gradient(to bottom, #3b82f6, #1e293b); }
+        .star { color: #fbbf24; font-size: 12px; letter-spacing: 1px; }
+        .typing-effect { overflow: hidden; border-right: .15em solid #3b82f6; white-space: nowrap; margin: 0 auto; letter-spacing: .15em; animation: typing 1s steps(40, end), blink-caret .75s step-end infinite; }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #3b82f6 } }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen p-6">
+
+<div id="app" class="max-w-6xl mx-auto">
+    
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 mb-3">UniPlanner Pro</h1>
+        <p class="text-slate-400">基于阶梯式能力评估的精准学业规划系统</p>
+    </header>
+
+    <!-- 第一步：深度信息采集 -->
+    <div v-if="step === 1" class="glass-panel rounded-2xl p-8 max-w-4xl mx-auto shadow-2xl">
+        <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+            <span class="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+            输入你的基础学情与真实能力（拒绝画大饼）
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="md:col-span-1">
+                <label class="block text-sm text-slate-400 mb-2">就读高校</label>
+                <input type="text" v-model="form.university" placeholder="如：北方工业大学" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none">
+            </div>
+            <div class="md:col-span-1">
+                <label class="block text-sm text-slate-400 mb-2">当前学期</label>
+                <select v-model="form.semester" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none">
+                    <option value="" disabled>请选择</option>
+                    <option value="大一上">大一上学期</option><option value="大一下">大一下学期</option>
+                    <option value="大二上">大二上学期</option><option value="大二下">大二下学期</option>
+                    <option value="大三上">大三上学期</option><option value="大三下">大三下学期</option>
+                    <option value="大四上">大四上学期</option>
+                </select>
+            </div>
+            <div class="md:col-span-1">
+                <label class="block text-sm text-slate-400 mb-2">所学专业</label>
+                <input type="text" v-model="form.major" placeholder="如：自动化、计算机、电子" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">目前的成绩排名</label>
+                <select v-model="form.gpaRank" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none">
+                    <option value="" disabled>请选择你的真实水平</option>
+                    <option value="前10%">专业前 10% (学霸)</option>
+                    <option value="前30%">专业前 11% - 30% (中上游)</option>
+                    <option value="中游">专业中游 (基础尚可)</option>
+                    <option value="较差">专业靠后 (存在挂科风险)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">你当前真实的代码/技术能力</label>
+                <select v-model="form.skillLevel" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none">
+                    <option value="" disabled>请选择真实技能状态</option>
+                    <option value="零基础">零基础小白 (只会Hello World)</option>
+                    <option value="刚入门">刚入门 (学完C语言/Python基础，没做过项目)</option>
+                    <option value="有基础">有基础 (能看懂开源代码，能跟着教程做东西)</option>
+                    <option value="独立项目">有独立项目 (能独立开发完整系统，有作品)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">细分研究方向</label>
+                <select v-model="form.interestSelect" @change="handleInterestChange" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none">
+                    <option value="" disabled>请先填写专业以匹配方向</option>
+                    <option v-for="opt in dynamicInterests" :key="opt" :value="opt">{{ opt }}</option>
+                    <option value="其他">其他方向（手动输入）</option>
+                </select>
+                <input v-if="form.interestSelect === '其他'" type="text" v-model="form.interestCustom" placeholder="请输入自定义方向" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:border-blue-500 focus:outline-none mt-2 animate-fade-in">
+            </div>
+            
+            <div>
+                <label class="block text-sm text-slate-400 mb-2">毕业核心去向</label>
+                <div class="flex gap-4">
+                    <label class="flex-1 p-3 rounded-lg border cursor-pointer text-center transition" :class="form.goal === 'postgrad' ? 'border-blue-500 bg-blue-900/30' : 'border-slate-700 bg-slate-800/50'">
+                        <input type="radio" value="postgrad" v-model="form.goal" class="hidden">
+                        <span class="text-xl block mb-1">🎓</span><span class="font-bold text-sm">考/保研</span>
+                    </label>
+                    <label class="flex-1 p-3 rounded-lg border cursor-pointer text-center transition" :class="form.goal === 'employment' ? 'border-blue-500 bg-blue-900/30' : 'border-slate-700 bg-slate-800/50'">
+                        <input type="radio" value="employment" v-model="form.goal" class="hidden">
+                        <span class="text-xl block mb-1">💼</span><span class="font-bold text-sm">直接就业</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <label class="block text-sm text-slate-400 mb-2">抗压与执行力评估</label>
+            <div class="flex gap-2">
+                <label v-for="level in [1,2,3]" :key="level" class="flex-1 p-2 rounded-lg border text-center cursor-pointer transition" :class="form.stress === level ? 'border-blue-500 bg-blue-900/30 text-blue-400' : 'border-slate-700 bg-slate-800/50 text-slate-400'">
+                    <input type="radio" :value="level" v-model="form.stress" class="hidden">
+                    <span class="text-sm font-medium">{{ level === 1 ? '求稳 (单线作战)' : level === 2 ? '中等 (能抗双线)' : '极限 (全能卷王)' }}</span>
+                </label>
+            </div>
+        </div>
+
+        <button @click="startAnalysis" :disabled="!isFormValid" class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-bold py-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+            {{ isFormValid ? '评估战力并生成阶梯规划' : '请完整填写所有必填信息' }}
+        </button>
+    </div>
+
+    <!-- 加载中 -->
+    <div v-if="step === 'loading'" class="glass-panel rounded-2xl p-12 max-w-2xl mx-auto text-center shadow-2xl flex flex-col items-center">
+        <div class="w-16 h-16 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin mb-6"></div>
+        <h2 class="text-xl font-bold text-blue-400 mb-6">正在评估战力值并匹配阶梯赛事...</h2>
+        <div class="text-left w-full text-slate-300 font-mono text-sm space-y-2">
+            <p v-for="(log, index) in loadingLogs" :key="index" class="typing-effect" v-show="currentLogIndex >= index">
+                <span class="text-green-400">></span> {{ log }}
+            </p>
+        </div>
+    </div>
+
+    <!-- 第二步：终极定制报告 -->
+    <div v-if="step === 2" class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+        
+        <!-- 左侧：数据面板 -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- 战力评估雷达 -->
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-purple-500 relative overflow-hidden">
+                <h3 class="text-lg font-bold mb-2 flex items-center gap-2 text-purple-400">
+                    当前战力评估 (1-100)
+                </h3>
+                <div class="text-center my-4">
+                    <span class="text-5xl font-bold text-white">{{ combatPower }}</span>
+                    <span class="text-sm text-slate-400 block mt-1">
+                        {{ combatPower < 40 ? '新手村保护期' : combatPower < 70 ? '进阶挑战者' : '高玩冲刺期' }}
+                    </span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2.5 mb-2">
+                    <div class="bg-purple-500 h-2.5 rounded-full" :style="{ width: combatPower + '%' }"></div>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed mt-3">
+                    <span class="font-bold text-purple-400">系统提示：</span> 
+                    {{ combatPower < 40 ? '鉴于你目前基础较薄弱，系统已自动为你屏蔽国赛级别的高阶赛事，优先规划校内赛与基础刷题，防止你因受挫而放弃。' : combatPower < 70 ? '你具备一定基础，可以尝试省级/国家级普通赛事积累经验，但暂时不建议直接硬刚顶级大厂赛。' : '你底子很好，直接冲击国家级白名单赛事和大厂绿卡赛！' }}
+                </p>
+            </div>
+
+            <!-- 导师匹配 -->
+            <div class="glass-panel p-6 rounded-2xl border-t-4 border-cyan-500">
+                <h3 class="text-lg font-bold mb-4">匹配课题组 (本校优先)</h3>
+                <div class="space-y-3">
+                    <div v-for="prof in matchedProfs" :key="prof.name" class="bg-slate-800/60 p-3 rounded-lg border border-slate-700 relative overflow-hidden">
+                        <div v-if="prof.isLocal" class="absolute top-0 right-0 bg-cyan-600 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">🏠 本校</div>
+                        <div v-else class="absolute top-0 right-0 bg-slate-600 text-slate-300 text-[10px] px-2 py-0.5 rounded-bl-lg">🌍 外校</div>
+                        <div class="flex justify-between items-start mb-1 pr-12">
+                            <span class="font-bold text-white text-sm">{{ prof.name }} 教授</span>
+                        </div>
+                        <p class="text-xs text-blue-300 mb-1">{{ prof.lab }} <span class="text-slate-500 text-[10px]">({{ prof.school }})</span></p>
+                        <p class="text-xs text-slate-400">方向：{{ prof.research }}</p>
+                        <div v-if="combatPower < 40" class="mt-2 text-[10px] text-red-400 bg-red-900/20 px-2 py-1 rounded">⚠️ 战力不足，暂不建议套磁，先打基础。</div>
+                        <div v-else class="mt-2 text-[10px] text-green-400 bg-green-900/20 px-2 py-1 rounded">✅ 可尝试发邮件附简历。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧：高度个性化时间轴 -->
+        <div class="lg:col-span-2">
+            <div class="glass-panel p-8 rounded-2xl h-full flex flex-col">
+                <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold">你的阶梯式打怪路线图</h2>
+                        <p class="text-xs text-slate-400 mt-1">专业：{{ form.major }} | 技能：{{ form.skillLevel }} | 目标：{{ form.goal === 'postgrad' ? '保研' : '就业' }}</p>
+                    </div>
+                    <button @click="step = 1" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition">修改信息</button>
+                </div>
+
+                <div class="relative pl-8 flex-1 overflow-y-auto hide-scrollbar pr-2" style="max-height: 650px;">
+                    <div class="timeline-line"></div>
+                    
+                    <div v-for="(node, index) in detailedSchedule" :key="index" class="timeline-dot relative mb-8">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm font-bold text-blue-400 bg-blue-900/40 px-2 py-1 rounded border border-blue-800">{{ node.period }}</span>
+                            <span class="text-xs font-medium text-slate-400">{{ node.theme }}</span>
+                        </div>
+                        
+                        <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-4 hover:border-slate-500 transition">
+                            <ul class="space-y-4">
+                                <li v-for="(task, tIndex) in node.tasks" :key="tIndex" class="flex items-start gap-2 text-sm">
+                                    <span class="text-blue-500 mt-0.5">▹</span>
+                                    <div class="w-full">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-bold text-white text-sm">{{ task.title }}</span>
+                                            <span class="star" v-if="task.diff">{{ '★'.repeat(task.diff) }}{{ '☆'.repeat(5 - task.diff) }}</span>
+                                        </div>
+                                        <p class="text-slate-400 text-xs leading-relaxed">{{ task.desc }}</p>
+                                        
+                                        <div v-if="task.tags" class="flex gap-2 mt-2">
+                                            <span v-for="tag in task.tags" class="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{{ tag }}</span>
+                                        </div>
+
+                                        <div v-if="task.compDates" class="mt-2 bg-slate-900 rounded p-2 text-xs text-slate-300 font-mono border border-slate-700">
+                                            <div class="grid grid-cols-2 gap-1">
+                                                <div><span class="text-slate-500">报名:</span> {{ task.compDates.reg }}</div>
+                                                <div><span class="text-slate-500">比赛:</span> {{ task.compDates.event }}</div>
+                                            </div>
+                                            <p v-if="task.predicted" class="text-orange-400 mt-1 text-[10px]">* 依据往年预测</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="timeline-dot relative pb-4">
+                        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl p-4 text-center shadow-lg">
+                            <h3 class="text-lg font-bold mb-1">{{ form.goal === 'postgrad' ? '🎓 成功上岸' : '💼 拿下Offer' }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { createApp, ref, computed, watch } = Vue;
+
+    createApp({
+        setup() {
+            const step = ref(1); 
+            
+            const form = ref({
+                university: '', semester: '', major: '', gpaRank: '', skillLevel: '',
+                interestSelect: '', interestCustom: '', goal: '', stress: null 
+            });
+
+            // 动态方向匹配库
+            const majorOptions = [
+                { keywords: ['计算机', '软件', '网络安全', '人工智能'], options: ['计算机视觉 (CV)', '自然语言处理 (NLP)', '分布式系统与云计算', '操作系统内核与底层驱动', '边缘计算与嵌入式AI'] },
+                { keywords: ['电子', '微电子', '集成电路'], options: ['数字IC设计/FPGA', '模拟电路与射频', '传感器与物联网', '嵌入式硬件开发'] },
+                { keywords: ['自动化', '控制', '机器人'], options: ['机器人运动控制与SLAM', '工业控制系统', '模式识别与智能系统'] },
+                { keywords: ['通信', '信息'], options: ['无线通信与网络', '信号与信息处理', '多媒体通信'] },
+                { keywords: ['机械', '机电'], options: ['机电一体化', '智能制造与机器人', '机械设计及理论'] }
+            ];
+
+            const dynamicInterests = computed(() => {
+                const m = form.value.major;
+                if (!m) return ['请先填写专业'];
+                for (let cat of majorOptions) {
+                    if (cat.keywords.some(k => m.includes(k))) return cat.options;
+                }
+                return ['通用软件工程', '算法与数据结构', '系统架构'];
+            });
+
+            watch(() => form.value.major, () => { form.value.interestSelect = ''; form.value.interestCustom = ''; });
+
+            const isFormValid = computed(() => {
+                return form.value.university.trim() !== '' && form.value.major.trim() !== '' && form.value.semester !== '' && 
+                       form.value.gpaRank !== '' && form.value.skillLevel !== '' && form.value.goal !== '' && 
+                       form.value.stress !== null && (form.value.interestSelect !== '' && (form.value.interestSelect !== '其他' || form.value.interestCustom.trim() !== ''));
+            });
+
+            const actualInterest = computed(() => form.value.interestSelect === '其他' ? form.value.interestCustom : form.value.interestSelect);
+
+            const handleInterestChange = () => { if (form.value.interestSelect !== '其他') form.value.interestCustom = ''; };
+
+            // ====== 核心：战力计算 ======
+            const combatPower = computed(() => {
+                let score = 50; // 基础分
+                
+                // GPA修正
+                if (form.value.gpaRank === '前10%') score += 20;
+                else if (form.value.gpaRank === '前30%') score += 10;
+                else if (form.value.gpaRank === '中游') score += 0;
+                else if (form.value.gpaRank === '较差') score -= 15;
+
+                // 技能修正
+                if (form.value.skillLevel === '独立项目') score += 30;
+                else if (form.value.skillLevel === '有基础') score += 15;
+                else if (form.value.skillLevel === '刚入门') score += 0;
+                else if (form.value.skillLevel === '零基础') score -= 20;
+
+                return Math.max(10, Math.min(100, score)); // 限制在10-100之间
+            });
+
+            // 导师匹配
+            const matchedProfs = computed(() => {
+                const school = form.value.university || '本校';
+                const m = form.value.major;
+                const profsDB = [
+                    { name: '赵建国', lab: '机器人控制与自动化实验室', research: 'SLAM算法、ROS系统', isLocal: true, cat: ['自动化', '机器人'] },
+                    { name: '刘洋', lab: '智能制造与系统控制', research: '工业互联网、控制理论', isLocal: false, school: '上海交通大学', cat: ['自动化', '机械'] },
+                    { name: '王强', lab: '微纳电子与集成系统实验室', research: 'FPGA硬件加速、集成电路', isLocal: true, cat: ['电子', '微电子'] },
+                    { name: '陈明', lab: '宽带通信与信号处理实验室', research: '5G/6G通信算法', isLocal: false, school: '北京邮电大学', cat: ['通信', '信息'] },
+                    { name: '张建国', lab: '智能硬件与嵌入式系统实验室', research: '边缘计算、RTOS', isLocal: true, cat: ['计算机', '软件', '电子'] },
+                    { name: '李红', lab: '人工智能与数据挖掘实验室', research: '深度学习、CV', isLocal: true, cat: ['计算机', '人工智能'] },
+                    { name: '孙志远', lab: '系统结构与安全实验室', research: 'Linux内核优化', isLocal: false, school: '清华大学', cat: ['计算机', '软件'] }
+                ];
+                let matched = profsDB.filter(p => p.cat.some(c => m.includes(c)));
+                if (matched.length === 0) matched = profsDB;
+                matched = matched.map(p => p.isLocal ? { ...p, school: school } : p);
+                matched.sort((a, b) => (a.isLocal === b.isLocal) ? 0 : (a.isLocal ? -1 : 1));
+                return matched.slice(0, 3);
+            });
+
+            const loadingLogs = ref([]);
+            const currentLogIndex = ref(-1);
+            
+            const startAnalysis = () => {
+                step.value = 'loading';
+                loadingLogs.value = [
+                    `计算当前战力值：${combatPower.value} 分...`,
+                    `读取专业【${form.value.major}】与方向【${actualInterest.value}】...`,
+                    `根据战力值，锁定适宜的赛事池（难度系数匹配中）...`,
+                    `剔除高不可攀的赛事，拦截低效重复赛事...`,
+                    "生成千人千面的阶梯时间轴！"
+                ];
+                currentLogIndex.value = -1;
+                let i = 0;
+                const interval = setInterval(() => {
+                    currentLogIndex.value = i; i++;
+                    if (i >= loadingLogs.value.length) { clearInterval(interval); setTimeout(() => { step.value = 2; }, 400); }
+                }, 300);
+            };
+
+            // ====== 核心：阶梯式个性化引擎 ======
+            const detailedSchedule = computed(() => {
+                const isPostgrad = form.value.goal === 'postgrad';
+                const currentSem = form.value.semester;
+                const power = combatPower.value; // 战力
+                const interest = actualInterest.value;
+                
+                const semesters = ['大一上', '大一下', '大二上', '大二下', '大三上', '大三下', '大四上'];
+                const startIndex = semesters.indexOf(currentSem);
+                if(startIndex === -1) return [];
+
+                // 数据库中加入难度星级 (1-5星)
+                const taskDB = [
+                    // --- 新手村 (1-2星) ---
+                    { sem: '大一下', title: '校内程序设计新生赛', desc: '新手村试金石。不要求复杂算法，主要看基础语法和逻辑。', tags: ['计算机', '软件', '通用'], goal: 'both', diff: 1, date: { reg: '3月-4月', event: '4月' }, minPower: 0 },
+                    { sem: '大一下', title: '洛谷/PTA基础题单通关 (100题)', desc: '如果不打比赛，先把基础题单刷完。这是你后续参加任何大赛的底气。', tags: ['通用'], goal: 'both', diff: 1, minPower: 0 },
+                    { sem: '大二上', title: '蓝桥杯 (省赛)', desc: '难度适中，大厂认可度不错。适合有C/Python基础的同学。', tags: ['计算机', '软件', '电子'], goal: 'both', diff: 2, date: { reg: '10月-12月', event: '4月' }, minPower: 40 },
+                    { sem: '大二上', title: '数学建模校赛', desc: '找大腿队友，学习排版和基础模型，争取拿校奖。', tags: ['通用'], goal: 'postgrad', diff: 2, date: { reg: '4月-5月', event: '6月' }, minPower: 40 },
+                    { sem: '大二下', title: '全国大学生电子设计竞赛(电赛)校赛', desc: '硬件人的基础试炼，学画板子、焊电路。', tags: ['电子', '微电子', '硬件'], goal: 'both', diff: 2, date: { reg: '3月-5月', event: '5月' }, minPower: 45 },
+
+                    // --- 进阶场 (3星) ---
+                    { sem: '大二下', title: '蓝桥杯 (国赛)', desc: '在省赛拿奖后才能进入国赛，国奖含金量极高。', tags: ['计算机', '软件'], goal: 'both', diff: 3, date: { reg: '同省赛', event: '6月' }, minPower: 60 },
+                    { sem: '大二下', title: '中国大学生计算机设计大赛', desc: '84项保研白名单赛事，需要完整的作品（App/Web/算法）。', tags: ['计算机', '软件'], goal: 'postgrad', diff: 3, date: { reg: '1月-3月', event: '5月-7月' }, minPower: 55 },
+                    { sem: '大三上', title: '全国大学生数学建模国赛', desc: '保研加分神器。但如果不会写代码、不会建模，去了也是白搭。', tags: ['通用'], goal: 'postgrad', diff: 3, date: { reg: '6月-9月', event: '9月' }, minPower: 60 },
+                    { sem: '大三上', title: '全国大学生电子设计竞赛(电赛)国赛', desc: '四天三夜封闭开发，抗压能力和硬件水平的终极考验。', tags: ['电子', '通信', '硬件'], goal: 'both', diff: 3, date: { reg: '5月-6月', event: '8月' }, minPower: 65 },
+
+                    // --- 神仙局 (4-5星) ---
+                    { sem: '大三上', title: '华为软件精英挑战赛', desc: '机考绿卡直通车。对算法和工程架构要求极高，适合大佬。', tags: ['计算机', '软件'], goal: 'employment', diff: 4, date: { reg: '3月-4月', event: '4月-5月' }, minPower: 75 },
+                    { sem: '大三上', title: 'Kaggle / 天池顶级数据竞赛', desc: '大厂算法岗敲门砖，需要深度学习框架实战能力。', tags: ['计算机', '人工智能'], goal: 'both', diff: 4, date: { reg: '随时', event: '全年' }, minPower: 75 },
+                    { sem: '大三下', title: 'CCF CCSP竞赛', desc: '12小时系统级机考。如果你是底层/架构方向，且基础极好，去冲。', tags: ['计算机', '软件'], goal: 'employment', diff: 5, date: { reg: '9月', event: '10月' }, minPower: 85 }
+                ];
+
+                const schedule = [];
+                
+                for (let i = startIndex; i < semesters.length; i++) {
+                    const sem = semesters[i];
+                    const isCurrent = i === startIndex;
+                    let tasksForSem = [];
+
+                    // 1. 强制基础任务
+                    if (power < 40) {
+                        // 低战力：强制加基础课和刷题任务
+                        if (sem.includes('大一') || sem.includes('大二')) {
+                            tasksForSem.push({
+                                title: '🚨 核心基础课死磕',
+                                desc: '战力偏弱，当前核心任务是保证高数、C语言、数据结构不挂科，并尽量拿高分。',
+                                tags: ['基础'], diff: 1
+                            });
+                        }
+                    } else {
+                        // 高战力：提示卷绩点和实验室
+                        if (sem.includes('大一') || sem.includes('大二')) {
+                            tasksForSem.push({
+                                title: '绩点冲刺与进实验室',
+                                desc: isPostgrad ? '利用你的基础优势，稳居前列，并尽早联系导师进组。' : '刷高绩点，并开始尝试找日常实习。',
+                                tags: ['进阶'], diff: 2
+                            });
+                        }
+                    }
+
+                    // 2. 筛选适合当前战力的比赛
+                    let matchedComps = taskDB.filter(comp => {
+                        if (comp.sem !== sem) return false;
+                        
+                        // 专业/兴趣匹配
+                        const matchTag = comp.tags.some(t => 
+                            form.value.major.includes(t) || actualInterest.value.includes(t)
+                        ) || comp.tags.includes('通用');
+                        if (!matchTag) return false;
+
+                        // 目标匹配
+                        if (comp.goal !== 'both' && comp.goal !== form.value.goal) return false;
+
+                        // **核心：战力匹配**
+                        // 你的战力必须大于等于比赛的最低要求，才能推荐给你
+                        if (power < comp.minPower) return false;
+
+                        return true;
+                    });
+
+                    // 3. 根据承压能力分配比赛
+                    let finalTasks = [...tasksForSem];
+                    if (form.value.stress === 1) {
+                        if (matchedComps.length > 0) finalTasks.push(matchedComps[0]);
+                    } else if (form.value.stress === 2) {
+                        finalTasks.push(...matchedComps.slice(0, 2));
+                    } else {
+                        finalTasks.push(...matchedComps.slice(0, 3));
+                    }
+
+                    // 4. 特殊的“战力不足”提示 (替代方案)
+                    // 如果高战力比赛被拦截了，可以给一个委婉的提示
+                    if (power < 60 && (sem === '大二下' || sem === '大三上')) {
+                         let blockedComps = taskDB.filter(c => c.sem === sem && c.minPower > power && c.tags.some(t => form.value.major.includes(t) || t === '通用'));
+                         if (blockedComps.length > 0) {
+                             finalTasks.push({
+                                 title: '⏳ 沉淀期 (暂缓高阶赛事)',
+                                 desc: `系统检测到 "${blockedComps[0].title}" 等赛事对你当前战力来说压力过大。建议先按上述计划打基础，在下个学期战力提升后再解锁。`,
+                                 tags: ['系统提示'], diff: 1
+                             });
+                         }
+                    }
+
+                    if (finalTasks.length > 0) {
+                        schedule.push({
+                            period: sem,
+                            theme: isCurrent ? '当前学期（执行中）' : '未来规划',
+                            tasks: finalTasks
+                        });
+                    }
+                }
+                
+                if(schedule.length === 0) {
+                    schedule.push({ period: '当前学期', theme: '夯实基础', tasks: [{ title: '专注课内学习', desc: '补齐短板，争取逆袭。', diff: 1 }] });
+                }
+
+                return schedule;
+            });
+
+            return {
+                step, form, dynamicInterests, matchedProfs, startAnalysis, detailedSchedule, 
+                isFormValid, handleInterestChange, actualInterest, loadingLogs, currentLogIndex,
+                combatPower
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
